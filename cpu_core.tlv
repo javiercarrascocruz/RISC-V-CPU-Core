@@ -45,8 +45,20 @@
    $reset = *reset;
    
    //1.- PC
-   $next_pc[31:0] = $reset ? 32'b0 : $pc + 32'b100;
+   $next_pc[31:0] = $reset ? 32'b0 :
+                    $taken_br ? $br_tgt_pc : $pc + 32'b100;
    $pc[31:0] = >>1$next_pc;
+   //Branch handling
+   $is_b = $is_beq || $is_bne || $is_blt || $is_bge || $is_bltu || $is_bgeu;
+   $taken_br = $is_b ?
+               ($is_beq && ($src1_value == $src2_value) ? 1'b1 :
+               $is_bne && ($src1_value != $src2_value) ? 1'b1 :
+               $is_blt && (($src1_value < $src2_value) ^ ($src1_value[4] != $src2_value[4])) ? 1'b1 :
+               $is_bge && (($src1_value >= $src2_value) ^ ($src1_value[4] != $src2_value[4])) ? 1'b1 :
+               $is_bltu && ($src1_value < $src2_value) ? 1'b1 :
+               $is_bgeu && ($src1_value >= $src2_value) ? 1'b1 :1'b0) :
+               1'b0;
+   $br_tgt_pc[31:0] = $pc + $imm;
    
    //2.- IMem
    `READONLY_MEM($addr, $$read_data[31:0])
