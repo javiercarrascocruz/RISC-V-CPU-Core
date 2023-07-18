@@ -65,6 +65,27 @@
    $is_s_instr = $instr[6:2] ==? 5'b0100x;
    $is_b_instr = $instr[6:2] == 5'b11000;
    $is_j_instr = $instr[6:2] == 5'b11011;
+   //Instruction bit fields
+   $opcode[6:0] = $instr[6:0];
+   $rd[4:0] = $instr[11:7];
+   $rs1[4:0] = $instr[19:15];
+   $rs2[4:0] = $instr[24:20];
+   $funct3[2:0] = $instr[14:12];
+   $funct7[6:0] = $instr[31:25];
+   //Valid field signals
+   $rd_valid = $is_r_instr || $is_i_instr || $is_u_instr || $is_j_instr;
+   $rs1_valid = $is_r_instr || $is_i_instr || $is_s_instr || $is_b_instr;
+   $rs2_valid = $is_r_instr || $is_s_instr || $is_b_instr;
+   $funct3_valid = $is_r_instr || $is_i_instr || $is_s_instr || $is_b_instr;
+   $funct7_valid = $is_r_instr;
+   $imm_valid = ~$is_r_instr;
+   //Immediate value
+   $imm[31:0] = $is_i_instr ? {{21{$instr[31]}}, $instr[30:20]} :
+                $is_s_instr ? {{21{$instr[31]}}, $instr[30:25], $instr[11:8], $instr[7]} :
+                $is_b_instr ? {{20{$instr[31]}}, $instr[7], $instr[7], $instr[30:25], $instr[11:8], 1'b0} :
+                $is_u_instr ? {$instr[31:12], 12'b0} :
+                $is_j_instr ? {{12{$instr[31]}}, $instr[19:12], $instr[20], $instr[30:21], 1'b0} :
+                32'b0; //Default
 
    // Assert these to end simulation (before Makerchip cycle limit).
    *passed = 1'b0;
