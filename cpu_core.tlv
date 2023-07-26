@@ -117,7 +117,9 @@
    *failed = *cyc_cnt > M4_MAX_CYC;
    
    //4.- RF-R + 6.- RF-W
-   m4+rf(32, 32, $reset, $rd_valid, $rd[4:0], $result[31:0], $rs1_valid, $rs1[4:0], $src1_value, $rs2_valid, $rs2[4:0], $src2_value)
+   //Multiplexor to choose between ALU results and load instructions
+   $rf_w[31:0] = $is_load ? $ld_data : $result;
+   m4+rf(32, 32, $reset, $rd_valid, $rd[4:0], $rf_w[31:0], $rs1_valid, $rs1[4:0], $src1_value, $rs2_valid, $rs2[4:0], $src2_value)
    
    //5.- ALU
    //Subexpressions
@@ -134,7 +136,7 @@
    $result[31:0] = $is_andi ? $src1_value & $imm :
                    $is_ori ? $src1_value | $imm :
                    $is_xori ? $src1_value ^ $imm :
-                   $is_addi ? $src1_value + $imm :
+                   $is_addi | $is_r_instr | $is_load ? $src1_value + $imm :
                    $is_slli ? $src1_value << $imm[4:0] :
                    $is_srli ? $src1_value >> $imm[4:0] :
                    $is_and ? $src1_value & $src2_value :
@@ -160,7 +162,7 @@
                    $is_srai ? $srai_rslt[31:0] :
                    32'b0;
    
-   //m4+dmem(32, 32, $reset, $addr[4:0], $wr_en, $wr_data[31:0], $rd_en, $rd_data)
+   m4+dmem(32, 32, $reset, $result[6:2], $is_s_instr, $src2_value[31:0], $is_load, $ld_data)
    m4+cpu_viz()
 \SV
    endmodule
