@@ -20,7 +20,9 @@
    
    //1.- PC
    $next_pc[31:0] = $reset ? 32'b0 :
-                    $taken_br ? $br_tgt_pc : $pc + 32'b100;
+                    $taken_br | $is_jal ? $br_tgt_pc :
+                    $is_jalr ? $jalr_tgt_pc :
+                    $pc + 32'b100;
    $pc[31:0] = >>1$next_pc;
    //Branch handling
    $is_b = $is_beq || $is_bne || $is_blt || $is_bge || $is_bltu || $is_bgeu;
@@ -33,6 +35,7 @@
                $is_bgeu && ($src1_value >= $src2_value) ? 1'b1 :1'b0) :
                1'b0;
    $br_tgt_pc[31:0] = $pc + $imm;
+   $jalr_tgt_pc[31:0] = $src1_value + $imm;
    
    //2.- IMem
    `READONLY_MEM($addr, $$read_data[31:0])
